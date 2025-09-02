@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kavishe Browser</title>
+<meta name="theme-color" content="#0ea5a6">
+
+<!-- Manifest embedded -->
+<link rel="manifest" href='data:application/manifest+json,{"name":"Kavishe Browser","short_name":"KBrowser","start_url":".","display":"standalone","background_color":"#0ea5a6","theme_color":"#0ea5a6","icons":[{"src":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABi0lEQVRYhe2XvUoDQRSGv0kRzAxo0O0RZq4B6ADsQgKxwglYhghvQfYABO6hwKpYDrS6Fgh5kG0nW9i7MhBDhHJyZ/vy+T5Zk+VvYpSgrwO0BnAKdAkcCVd1DODu0b0lHI7gDFAnRQ1RLcG/8FN8DAk3cENqR2xK/ACW2tly1X6yI0yI0si3mSnbFv8gyXEmw5OAG7koPzC1eL+Q6ThgZ0k+f5/JfjeoJZ4HfA74Da1hU4EmGqI8ETwChPKhZl0vgtZawggk0XUTRfs+kpH5v0FKiQlTBS7hK6H5WppUXzN6FhR2P+8/hZsQPv9QxP2oi8/7DH2+BZVjFeUANzAn3F1I+idF2+ivwBPgL9cLBs2sYugS+VwM2+LP7vfDLMHN0Aj4QHvgR7KAW+uHvJ+8H/rdD4lzB/4H1lQF+JkC/LOtM74Dj8QruD6V92Jq8AVOZ5l8x/p0UlM9bK8ONwAAAABJRU5ErkJggg==","sizes":"32x32","type":"image/png"},{"src":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAABF0lEQVR4nO3BMQEAAADCoPVPbQ0PoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwCDoABV1f4AAABJRU5ErkJggg==","sizes":"192x192","type":"image/png"},{"src":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJYAAACWCAYAAACib2b1AAABKklEQVR4nO3BMQEAAADCoPVPbQ0PoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwCDoABV1f4AAABJRU5ErkJggg==","sizes":"512x512","type":"image/png"}]}'>
+  
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f8fafc}
+header{background:#0ea5a6;color:white;padding:12px;text-align:center;font-size:18px;font-weight:bold}
+#bar{display:flex;padding:8px;background:#e2e8f0}
+#url{flex:1;padding:8px;border-radius:8px;border:1px solid #ccc}
+#go{padding:8px 12px;margin-left:5px;background:#1e293b;color:white;border:none;border-radius:8px;cursor:pointer}
+#installBtn{display:none;padding:8px 12px;margin:8px;border:none;background:#1e293b;color:white;border-radius:8px;cursor:pointer;}
+#shortcuts{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}
+.card{background:white;border-radius:12px;padding:12px;text-align:center;box-shadow:0 2px 5px rgba(0,0,0,0.1);cursor:pointer;transition:0.2s;position:relative}
+.card:hover{transform:scale(1.05)}
+.card img{width:60px;height:60px;border-radius:10px;object-fit:cover;background:#f1f5f9}
+.card p{margin:8px 0 0;font-weight:bold;word-break:break-word}
+.card .remove{position:absolute;top:4px;right:4px;background:red;color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:14px;display:none;}
+.card:hover .remove{display:block;}
+#viewer{width:100%;height:70vh;border:none;display:none}
+#back{display:none;margin:10px;padding:8px 12px;border:none;background:#1e293b;color:white;border-radius:8px;cursor:pointer}
+#addShortcut{padding:8px 12px;margin:8px;border:none;background:#0ea5a6;color:white;border-radius:8px;cursor:pointer;width:calc(100% - 32px);}
+#shortcutInput,#shortcutName{width:100%;padding:6px;margin:4px 0;border-radius:6px;border:1px solid #ccc;}
+</style>
+</head>
+<body>
+<header>Kavishe Browser</header>
+
+<div id="bar">
+<input id="url" type="text" placeholder="Andika link hapa…"/>
+<button id="go">Nenda</button>
+</div>
+
+<button id="installBtn">Add to Home Screen</button>
+
+<div style="padding:12px;">
+<input id="shortcutInput" placeholder="Andika link ya shortcut hapa"/>
+<input id="shortcutName" placeholder="Andika jina la shortcut"/>
+<button id="addShortcut">Ongeza Shortcut</button>
+</div>
+
+<div id="shortcuts"></div>
+
+<button id="back" onclick="goHome()">⬅ Rudi</button>
+<iframe id="viewer"></iframe>
+
+<script>
+// Service Worker inline for offline caching
+if('serviceWorker' in navigator){
+  const swCode=`self.addEventListener('install',e=>{
+e.waitUntil(caches.open('kavishe-v1').then(cache=>cache.addAll(['/'])));
+});
+self.addEventListener('fetch',e=>{
+e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
+});`;
+  const blob=new Blob([swCode],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob))
+  .then(()=>console.log('SW registered'))
+  .catch(err=>console.log(err));
+}
+
+// Elements
+const input=document.getElementById('url');
+const go=document.getElementById('go');
+const viewer=document.getElementById('viewer');
+const back=document.getElementById('back');
+const shortcuts=document.getElementById('shortcuts');
+const installBtn=document.getElementById('installBtn');
+const addShortcutBtn=document.getElementById('addShortcut');
+const shortcutInput=document.getElementById('shortcutInput');
+const shortcutName=document.getElementById('shortcutName');
+
+// PWA Add to Home Screen
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  installBtn.style.display='inline-block';
+});
+installBtn.addEventListener('click',async ()=>{
+  installBtn.style.display='none';
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    const {outcome}=await deferredPrompt.userChoice;
+    console.log(outcome==='accepted'?'User accepted A2HS':'User dismissed A2HS');
+    deferredPrompt=null;
+  }
+});
+
+// Functions
+function openApp(url){
+  shortcuts.style.display='none';
+  viewer.style.display='block';
+  back.style.display='inline-block';
+  if(!url.startsWith('http'))url='https://'+url;
+  viewer.src=url;
+}
+
+function goHome(){
+  shortcuts.style.display='grid';
+  viewer.style.display='none';
+  back.style.display='none';
+  viewer.src='';
+  input.value='';
+}
+
+// Shortcut management
+function renderShortcuts(){
+  shortcuts.innerHTML='';
+  let stored=JSON.parse(localStorage.getItem('shortcuts')||'[]');
+  stored.forEach((s,i)=>{
+    const div=document.createElement('div');
+    div.className='card';
+    div.onclick=()=>openApp(s.link);
+    div.innerHTML=`<img src="" alt="icon"><p>${s.name}</p><button class="remove">×</button>`;
+    div.querySelector('.remove').onclick=(e)=>{
+      e.stopPropagation();
+      stored.splice(i,1);
+      localStorage.setItem('shortcuts',JSON.stringify(stored));
+      renderShortcuts();
+    };
+    shortcuts.appendChild(div);
+  });
+}
+
+// Add new shortcut
+addShortcutBtn.onclick=()=>{
+  const link=shortcutInput.value.trim();
+  const name=shortcutName.value.trim()||link;
+  if(link){
+    let stored=JSON.parse(localStorage.getItem('shortcuts')||'[]');
+    stored.push({link,name});
+    localStorage.setItem('shortcuts',JSON.stringify(stored));
+    shortcutInput.value=''; shortcutName.value='';
+    renderShortcuts();
+  }
+}
+
+// Event listeners
+go.onclick=()=>{if(input.value)openApp(input.value)};
+input.addEventListener('keypress',e=>{if(e.key==='Enter' && input.value)openApp(input.value)});
+
+// Initial render
+renderShortcuts();
+</script>
+</body>
+</html>
